@@ -30,6 +30,20 @@ describe Sphinx::Integration::Helper do
       end
     end
 
+    context "when product indexing" do
+      it do
+        helper = described_class.new(default_options.merge(rotate: true, indexes: 'product'))
+        expect_any_instance_of(Sphinx::Integration::Mysql::Replayer).to_not receive(:reset)
+        expect_any_instance_of(RedisMutex).to_not receive(:with_lock).and_yield
+        expect(adapter).to_not receive(:index)
+        expect(::ThinkingSphinx::Configuration.instance.mysql_client).to_not receive(:write)
+        expect(::ThinkingSphinx::Configuration.instance.mysql_vip_client).to_not receive(:write)
+        expect(::Sphinx::Integration::ReplayerJob).to_not receive(:enqueue).with('product_core')
+        helper.index
+        expect(Product.sphinx_indexes.first.recent_rt.current).to eq 0
+      end
+    end
+
     context "when offline indexing" do
       it do
         helper = described_class.new(default_options.merge(indexes: 'model_with_rt'))

@@ -14,6 +14,8 @@ module Sphinx
           check_action(action)
           klass = class_name.constantize
 
+          return true if klass == ::Product
+
           klass.define_indexes
           klass.transmitter.public_send(action, ids)
         end

@@ -42,6 +42,14 @@ describe ActiveRecord::Base do
 
         ModelWithRt.create!
       end
+
+      context 'when product' do
+        it do
+          expect_any_instance_of(Sphinx::Integration::Transmitter).to_not receive(:replace)
+
+          Product.create!
+        end
+      end
     end
 
     context 'when false' do
@@ -62,6 +70,16 @@ describe ActiveRecord::Base do
 
         model.update_attributes!(content: "foo#{rand(100)}")
       end
+
+      context 'when product' do
+        let!(:model) { Product.create! }
+
+        it do
+          expect_any_instance_of(Sphinx::Integration::Transmitter).to_not receive(:replace)
+
+          model.update_attributes!(name: "foo#{rand(100)}")
+        end
+      end
     end
 
     context 'when destroy' do
@@ -72,6 +90,17 @@ describe ActiveRecord::Base do
         expect_any_instance_of(Sphinx::Integration::Transmitter).not_to receive(:replace)
 
         model.destroy
+      end
+
+      context 'when product' do
+        let!(:model) { Product.create! }
+
+        it do
+          expect_any_instance_of(Sphinx::Integration::Transmitter).to_not receive(:delete)
+          expect_any_instance_of(Sphinx::Integration::Transmitter).to_not receive(:replace)
+
+          model.destroy
+        end
       end
 
       context 'when disabled' do
@@ -96,6 +125,17 @@ describe ActiveRecord::Base do
 
       ModelWithRt.transmitter_update([model1, model2])
     end
+
+    context 'when product' do
+      let!(:model1) { Product.create! }
+      let!(:model2) { Product.create! }
+
+      it do
+        expect_any_instance_of(Sphinx::Integration::Transmitter).to_not receive(:replace).with([model1, model2])
+
+        Product.transmitter_update([model1, model2])
+      end
+    end
   end
 
   describe '.transmitter_update_all' do
@@ -104,6 +144,13 @@ describe ActiveRecord::Base do
         to receive(:replace_all).with(matching: '@id_idx 1', where: {id: 1})
 
       ModelWithRt.transmitter_update_all(matching: '@id_idx 1', where: {id: 1})
+    end
+
+    it do
+      expect_any_instance_of(Sphinx::Integration::Transmitter).
+        to_not receive(:replace_all).with(matching: '@id_idx 1', where: {id: 1})
+
+      Product.transmitter_update_all(matching: '@id_idx 1', where: {id: 1})
     end
   end
 end

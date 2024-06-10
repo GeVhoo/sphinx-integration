@@ -68,6 +68,8 @@ module Sphinx
       def try_process_records(action)
         result = true
 
+        return result if transmitter.klass == ::Product
+
         if @buffer[action].size > @buffer_size
           batch = @buffer[action].shift(@batch_size)
 

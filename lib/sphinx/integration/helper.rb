@@ -60,6 +60,8 @@ module Sphinx::Integration
       log "Index sphinx"
 
       @indexes.each do |index|
+        next if index.name == 'product'
+
         rotate_index = rotate? && index.rt?
 
         ::Sphinx::Integration::Mysql::Replayer.new(index.core_name).reset if rotate_index

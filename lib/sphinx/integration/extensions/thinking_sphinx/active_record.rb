@@ -12,6 +12,8 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::ActiveRecord
 
     # TODO: удалить
     def update_sphinx_fields(*args, **options)
+      return true if transmitter.klass == ::Product
+
       define_indexes
       transmitter.update_fields(*args, **options)
     end
@@ -21,17 +23,23 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::ActiveRecord
     #
     # @see Sphinx::Integration::Transmitter#retransmit
     def transmitter_update_all(matching: nil, where: {})
+      return true if transmitter.klass == ::Product
+
       define_indexes
       transmitter.replace_all(matching: matching, where: where)
     end
 
     def transmitter_update(ids)
+      return true if transmitter.klass == ::Product
+
       define_indexes
 
       transmitter.replace(ids)
     end
 
     def transmitter_delete(ids)
+      return true if transmitter.klass == ::Product
+
       define_indexes
 
       transmitter.delete(ids)
@@ -54,11 +62,15 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::ActiveRecord
 
     # обновление данных в сфинксе
     def transmitter_update
+      return true if instance_of?(::Product)
+
       self.class.transmitter.replace(self)
     end
 
     # удаление данных в сфинксе
     def transmitter_destroy
+      return true if instance_of?(::Product)
+
       self.class.transmitter.delete(self)
     end
   end

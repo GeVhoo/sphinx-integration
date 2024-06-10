@@ -9,6 +9,16 @@ RSpec.describe Sphinx::Integration::TransmitterJob do
 
       described_class.execute(ModelWithRt.to_s, 'replace', [model.id])
     end
+
+    context 'when product' do
+      let(:model) { Product.create! }
+
+      it do
+        expect_any_instance_of(Sphinx::Integration::Transmitter).to_not receive(:replace).with([model.id])
+
+        described_class.execute(Product.to_s, 'replace', [model.id])
+      end
+    end
   end
 
   describe '.enqueue' do

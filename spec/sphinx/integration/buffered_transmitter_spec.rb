@@ -2,7 +2,8 @@ require 'spec_helper'
 
 describe Sphinx::Integration::BufferedTransmitter do
   let(:client) { ::ThinkingSphinx::Configuration.instance.mysql_client }
-  let(:transmitter) { Sphinx::Integration::Transmitter.new(ModelWithRt) }
+  let(:transmitter) { Sphinx::Integration::Transmitter.new(model) }
+  let(:model) { ModelWithRt }
 
   let(:buffered_transmitter) { described_class.new(transmitter, buffered_transmitter_options) }
   let(:buffered_transmitter_options) { {buffer_size: buffer_size} }
@@ -55,6 +56,17 @@ describe Sphinx::Integration::BufferedTransmitter do
           expect(transmitter).to_not have_received(transmitter_method)
         end
       end
+
+      context 'when product' do
+        let(:model) { Product }
+
+        it do
+          callings_args.each do |args|
+            expect(calling.call(args)).to be true # sphinx disabled
+            expect(transmitter).to_not have_received(transmitter_method)
+          end
+        end
+      end
     end
 
     context 'when calling count equal buffer size' do
@@ -64,6 +76,17 @@ describe Sphinx::Integration::BufferedTransmitter do
         callings_args.each do |args|
           expect(calling.call(args)).to be false # sphinx disabled
           expect(transmitter).to_not have_received(transmitter_method)
+        end
+      end
+
+      context 'when product' do
+        let(:model) { Product }
+
+        it do
+          callings_args.each do |args|
+            expect(calling.call(args)).to be true # sphinx disabled
+            expect(transmitter).to_not have_received(transmitter_method)
+          end
         end
       end
     end
@@ -188,6 +211,24 @@ describe Sphinx::Integration::BufferedTransmitter do
         buffered_transmitter.process_immediate
         expect(transmitter).to have_received(:replace).with(replace_args.flatten)
         expect(transmitter).to have_received(:delete).with(delete_args.flatten)
+      end
+
+      context 'when product' do
+        let(:model) { Product }
+
+        let(:replace_product_args) { Array.new(buffer_size) { |index| [mock_model(model, id: index)] } }
+        let(:delete_product_args) { Array.new(buffer_size) { |index| [mock_model(model, id: index)] } }
+
+        it 'do all buffered actions immediate' do
+          replace_product_args.each { |args| buffered_transmitter.replace(*args) }
+          delete_product_args.each { |args| buffered_transmitter.delete(*args) }
+
+          expect(transmitter).to_not have_received(:replace)
+          expect(transmitter).to_not have_received(:delete)
+          buffered_transmitter.process_immediate
+          expect(transmitter).to_not have_received(:replace).with(replace_product_args.flatten)
+          expect(transmitter).to_not have_received(:replace).with(delete_product_args.flatten)
+        end
       end
     end
   end
